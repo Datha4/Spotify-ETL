@@ -57,7 +57,7 @@ To manage via a UI, I use Rancher, which allows me to quickly download Helm char
 However, some services are not directly available in the Helm charts, so I had to create the `Docker` images (via `DockerHub`) and then deploy them in pods (with a NodePort service to expose them).
 
 > [!TIP]  
->Play with the windows DNS to set your domain name 
+> change DNS to set the domain name 
 ### 1. Data Extraction & Preprocessing
 The data extraction of the data is mainly made (exclusively for the moment) by the [Spotify API](https://developer.spotify.com/documentation/web-api). On which data is collected at a `JSON` format the is meant to be processed.
 
