@@ -1,0 +1,14 @@
+# Ignorer les fichiers de configuration d'environnement
+.env
+.env.local
+.env.*.local
+.venv
+venv
+# Ignorer les fichiers de configuration spécifiques à votre IDE
+.vscode/
+.idea/
+venv/
+scrapping/spotify_collect/command
+database/cmd.txt
+fast_api/cmd.txt
+webapp/cmd.txt

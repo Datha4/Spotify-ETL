@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  fast_api: 
+    build:
+      context: ./fast_api
+      dockerfile: Dockerfile
+    container_name: fastapi_container
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+  streamlit_webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    container_name: webapp_interface_container
+    network_mode: host
+    stdin_open: true
+    tty: true
+    depends_on:
+      - fast_api 

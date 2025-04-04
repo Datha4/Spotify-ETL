@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  scrapping_api: 
+    build:
+      context: ./scrapping/spotify_collect
+      dockerfile: Dockerfile
+    container_name: scrapping_to_csv
+    network_mode: host
+    volumes:
+      - /tmp/output:/tmp/output
+
+  connect_db: 
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    container_name: db_connexion
+    network_mode: host
+    volumes:
+      - /tmp/output:/tmp/output
+    depends_on:
+      - scrapping_api
