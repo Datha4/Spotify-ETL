@@ -1,93 +1,78 @@
-# I. Project Overview
+# I. Project Overview (v1)
 
-[Go to Real Cool Heading section](#real-cool-heading)
 
-### *Music data extraction Pipeline*
 
-This project is a personal initiative aimed at creating an ETL pipeline for music data and displaying the analyzed data on a dedicated web app.
+### *What is the Spotify-ETL*
 
-### *The process*
+Spotify-ETL is a personal project aimed at creating an ETL pipeline for music data queried from Spotify and displaying the results on a dedicated web application.
+This project 
 
-The data is initially collected from a data source. For simplicity, I will use the [Spotify API](https://developer.spotify.com/documentation/web-api) at this stage. The collected data will include information about artists selected arbitrarily, along with their statistics (popularity, top tracks, number of listeners, etc.), as well as statistics on their top 10 tracks.
+### *What's the purpose*
 
-The collection will be performed through an automated Docker container (daily collection) responsible for transforming the data into a DataFrame and then into temporary files (`.xls` and `.csv`). These files are intended to be deleted at the end of the dedicated container's execution.
+The data is collected from a Spotify. Spotify provide a free API where you can get artists and music related data (from the [Spotify API](https://developer.spotify.com/documentation/web-api)) 
 
-These `CSV` and `XLS` files are archived on the GitHub repository (HERE) to maintain offline cloud-based versioning.
+The collected data will include information about artists selected arbitrarily, along with their statistics (popularity, top tracks, number of listeners, etc.), as well as statistics on their top 10 tracks. The goal is to perform multiple extractions over time and track the performance of these artists (in the form of graphs) as their metrics evolve.
 
-A continuously running PostgreSQL database will store the data persistently.
-
-Querying will be done from the WebApp, where users can input an SQL query. The query will be transmitted via a FastAPI-designed POST REST API, allowing users to obtain a downloadable CSV file corresponding to the query.
-
-Additionally, on this same web app, we will have analytical data on the selected artists.
+The project aims to showcase skills in both `DevOps` and `Data Engineering`, focusing on automation, data processing, and the integration of various technologies.
 
 ### *Tools & Technologies*
 
-- **Data Collect** - [Requests (for API)](https://pypi.org/project/requests/), ***Selenium (for webscrapping)***
-- **Containerization** - [Docker](https://docs.docker.com/language/python/containerize/)
+- **Data Collect** - [Requests (for API)](https://pypi.org/project/requests/), 
+- **Containerization** - [Kubernetes](https://docs.docker.com/language/python/containerize/), [Rancher](https://www.rancher.com/)
 - **Orchestration** - [Airflow](https://airflow.apache.org/docs/apache-airflow-providers/index.html#)
-- **Database** - [PostgreSql](https://www.postgresql.org/docs/), [Github](https://github.com/)
-- **WebApp** - [Streamlit](https://docs.streamlit.io/library/api-reference/write-magic)
+- **Database** - [PostgreSql](https://www.postgresql.org/docs/), [pgAdmin](https://www.pgadmin.org/)
 - **API** - [FastApi](https://fastapi.tiangolo.com/)
+- **WebApp** - [Streamlit](https://docs.streamlit.io/library/api-reference/write-magic)
 - **Language** - [Python](https://docs.python.org/3/), [SQL](https://sql.sh/)
 
 > [!NOTE]  
-> The majority of technologies used are chosen arbitrarily to provide an opportunity for hands-on practice with specific tools.
+> Tools are chosen because I want to use it. Not optimized
 
 # II. Architecture
 
 ![Data Architecture](images/white.png)
 
-> [!NOTE]  
-> Micro-service architecture offers numerous advantages:
->The different services are autonomous and can be developed by different teams, in various languages, as they can communicate with each other via their APIs.
->
-> - Each service is specialized in solving a single task, which makes it easier to identify problems or evolve a service.
-> - As each service is a small, independent unit of the rest of the system and specialized, it can be easily modified, thus allowing for faster and more agile development cycles.
-> - If some services require more resources (storage, computation), or if their resource needs change over time, it's easy to scale up a service without disrupting the functioning of other services.
-> - A service can be easily reused by other teams in other projects. The API indeed provides precise documentation on the use of the service, allowing other teams to include the service in their applications.
-Finally, it's easy to identify the sources of failures in such a system and repair these failures quickly or even modify the service to prevent the failure from reoccurring.
-
-# Results
-
-### WebApp query
-
-### WebApp data Analysis
+List of the microservices deployed by Kubernetes cluster:
+- Airflow
+- pgAdmin
+- postgresql
+- fastapi
+- streamlit
 
 # III. Summary
 
-1. [Data Extraction (API Call & Scrapping)](#mon-ancre)
-2. [Preprocessing]
-3. [Storing in Volume]
-4. [Historization on Github]
-5. [Loading in Database (SQL)]
-6. [Queries via FastAPI]
-7. [WebApp on streamlit]
-8. [Orchestation on Airflow]
-9. [DBT SQL versioning]
-
-# IV. Project Structure
-
-The project structure is generated by this [website](https://tree.nathanfriend.io/)
+0. Kubernetes application deployment
+1. Data Extraction & Preprocessing
+2. Orchestation on Airflow
+3. Ingest and Export
+4. FastAPI
+5. WebApp on streamlit
 
 # VI. Usage
+### 0. Kubernetes application deployment
+To deploy the platform, I use a Kubernetes cluster that will deploy the entire infrastructure in the form of deployments/pods.
+![rancher](images/rancher/rancher.png)
+To manage via a UI, I use Rancher, which allows me to quickly download Helm charts for [`PostgreSQL`](https://artifacthub.io/packages/helm/bitnami/postgresql), [`PgAdmin`](https://artifacthub.io/packages/helm/runix/pgadmin4), and [`Airflow`](https://artifacthub.io/packages/helm/apache-airflow/airflow). It facilitates the exposure of services and configuration.
 
-### 1. Data Extraction (API Call & Scrapping)
+However, some services are not directly available in the Helm charts, so I had to create the `Docker` images (via `DockerHub`) and then deploy them in pods (with a NodePort service to expose them).
+
+> [!TIP]  
+>Play with the windows DNS to set your domain name 
+### 1. Data Extraction & Preprocessing
 The data extraction of the data is mainly made (exclusively for the moment) by the [Spotify API](https://developer.spotify.com/documentation/web-api). On which data is collected at a `JSON` format the is meant to be processed.
 
 Mainly data on the artist himself and on his most successful hits are collected. 
 
-### 2. Preprocessing
 To process these datas we will use `pandas` which is a python's framework that allow to manage data and process it. We aim to order these data in 2 differents dataframe dedicated for specific informations about the artist, and about his bests hits : 
 
 ```
-- artists_data.csv
-- top_tracks.csv
+- {YYYY_MM_YY:HH_MM_SS}_artists_data.csv
+- {YYYY_MM_YY:HH_MM_SS}_top_tracks.csv
 ```
-
 > [!NOTE]  
->Each extraction will be followed by the date (YYYY_MM_YY:HH_MM_SS) of the extraction.
+>These files are stored on the local machine that execute the scripts
 
-*Sample of top tracks of an artist ("Pop Smoke") in `top_tracks.csv`:*
+*Sample of top tracks of an artist ("Pop Smoke") in `{YYYY_MM_YY:HH_MM_SS}_top_tracks.csv`:*
 
 | track_name                                    | album_name                           | album_releasedate | album_totaltracks | track_duration | track_popularity | track_number |
 |-----------------------------------------------|--------------------------------------|-------------------|-------------------|----------------|------------------|--------------|
@@ -95,7 +80,7 @@ To process these datas we will use `pandas` which is a python's framework that a
 | What You Know Bout Love                       | Shoot For The Stars Aim For The Moon | 03/07/2020        | 19                | 160000         | 82               | 15           |
 | For The Night (feat. Lil Baby &amp;   DaBaby) | Shoot For The Stars Aim For The Moon | 03/07/2020        | 19                | 190476         | 80               | 3            |
 
-*Sample of datas on the artists selected in `artists_data.csv`*:
+*Sample of datas on the artists selected in `{YYYY_MM_YY:HH_MM_SS}_artists_data.csv`*:
 
 | id                     | name         | genres                                                              | popularity | followers | image                                                            |   |
 |------------------------|--------------|---------------------------------------------------------------------|------------|-----------|------------------------------------------------------------------|---|
@@ -103,47 +88,59 @@ To process these datas we will use `pandas` which is a python's framework that a
 | 0Y5tJX1MQlPlqiwlOH1tJY | Travis Scott | ['hip hop', 'rap', 'slap house']                                    | 90         | 25230238  | https://i.scdn.co/image/ab6761610000e5eb19c2790744c792d05570bb71 |   |
 | 3TVXtAsR1Inumwj472S9r4 | Drake        | ['canadian hip hop', 'canadian pop', 'hip hop', 'pop rap',   'rap'] | 95         | 82340839  | https://i.scdn.co/image/ab6761610000e5eb4293385d324db8558179afd9 |   |
 
-Theses dataframe will be stored load in a PostgreSQL Database. 
+### 2. Orchestation on Airflow
+It is interesting to use Airflow to run the two scripts in parallel and properly visualize the workflows. However, since the cluster is not always running and the use cases are simple (only two files generated from the Spotify API), I limit its usage. But it is very interesting to work with.
+### 3. Ingest and Export
 
-### 3. Ingesting in Docker Volume
-The script is executed in a `Docker` container that will ingest the output Data in a docker volume. The `Docker` volume will stored locally the data in the /tmp repo.
-In this case we ensure to keep the data temporarily.
-
-### 4. Historization on Github
-*We can automate the historization in a repo on github with correct credential that will allows us to keep a tracking on csv file ...* 
-
-### 5. Loading in Database (SQL)
-
-### 6. Queries via FastAPI
-
+The script will store these file /tmp 
 > [!NOTE]  
->FastAPI is a modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints. It was created by Sebastián Ramírez and first released in December 2018. The key features of FastAPI include automatic data validation, serialization, documentation with OpenAPI, and high performance, comparable to NodeJS and Go.
+> Planned to use Kafka to ingest data
+
+The export is made through the python script, it connects to the postgresDB on create the right table in the right database
+
+### 4.  API via FastAPI
 
 FAST API is a service that will be used to serve as an agent for retrieving data from the PostgreSQL database. A `GET` endpoint will be used to collect all the existing tables in the database, and a `POST` endpoint will be used to perform a specific `SQL` query, allowing to extract a table viewable on the WebApp.
 
-This service is hosted at the address `http://localhost:8000` the documentation is based from OpenAPI standard, it is accessible at `http://localhost:8000/docs`
+The api is reachable on the cluster node address at the port configured in the pods service. The documentation is based from OpenAPI standard, it is accessible at `http://{node_address}:{port}/docs`
 
-![Data Architecture](images/fastapi/fastapi_get.png)
+![fastapi_documentation](images/fastapi/fastapi_get.png)
 
 *The 2 endpoints are used for the minimalist application*
 
-> [!CAUTION]  
-> The API will not be secured as it is intended for local use (💡improvements).
+> [!TIP]  
+> Improvements: use securized API with token.
+### 5. WebApp on streamlit
 
-### 7. WebApp on streamlit
+![fastapi_documentation](images/webapp/webapp.png)
+The web application currently allows users to query the database via an SQL query and download the CSV file directly from the app. However, there is no functionality for analysis, graph generation, or the ability to adjust the list of artists at this stage.
+> [!TIP]  
+> Improvements: make data-analysis.
+# VII. Enhancement and Update 
+Next Steps for Version Upgrade (by priority):
 
-### 8. Orchestation on Airflow
+### Development:
 
-### 9. DBT SQL versioning
+- Add Additional Scraping Sources: Expand data collection by incorporating more external scraping sources.
+### Ingestion:
 
-# V. Setup
+- Ingestion via Kafka: Optimize the data ingestion pipeline using Kafka for better scalability and real-time data streaming.
+### Processing:
 
-# VII. Enhancement & Known Issues
+- Use DBT for Data Transformation: Implement DBT (Data Build Tool) for streamlined and automated data processing, ensuring cleaner and more reliable datasets.
+### Web Application:
 
-- ELK
-- Kafka
-- K8S
+Better Analysis Features: Enhance the web application to allow more sophisticated analysis of the collected data, including better visualization and reporting.
 
+
+### Security : 
+- Password Credential Management: Enhance the security of the system by improving how passwords and credentials are handled.
+- Securisation of the API
+- Manage the accounts
+
+### Cloud Integration:
+
+- Migrate to AWS: Deploy the project on AWS to take advantage of cloud services such as scalability, security, and integration with other AWS tools.
+- or expose by a reverse proxy
 # VIII. Contact
-
-# real-cool-heading
+e-m@il : david.thak4@gmail.com
