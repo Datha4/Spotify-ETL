@@ -8,7 +8,3 @@ venv
 .vscode/
 .idea/
 venv/
-scrapping/spotify_collect/command
-database/cmd.txt
-fast_api/cmd.txt
-webapp/cmd.txt

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 if __name__ == "__main__":
     load_dotenv()
-    url = os.getenv("APP_URL")
+    url = os.getenv("TOKEN_URL")
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = {
         "grant_type": "client_credentials",
